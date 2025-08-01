@@ -25,7 +25,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'test_publisher = cartesian_motion_controller_test.test_publisher:main',
+            'test_publisher_sinusoidal = cartesian_motion_controller_test.test_publisher_sinusoidal:main',
+            'test_publisher_gradino = cartesian_motion_controller_test.test_publisher_gradino:main',
             'xdot_plot_publisher = cartesian_motion_controller_test.xdot_plot_publisher:main',
             'single_axis_publisher = cartesian_motion_controller_test.single_axis_publisher:main',
             'neural_6dof_publisher = cartesian_motion_controller_test.neural_6dof_publisher:main',
