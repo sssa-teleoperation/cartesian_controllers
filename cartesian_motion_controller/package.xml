@@ -12,6 +12,11 @@
   <depend>rclcpp</depend>
   <depend>cartesian_controller_base</depend>
   <depend>controller_interface</depend>
+  <depend>std_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>Eigen3</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

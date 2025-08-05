@@ -15,12 +15,21 @@ add_definitions(-DEIGEN_MPL2_ONLY)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(cartesian_controller_base REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+
 
 # Convenience variable for dependencies
 set(THIS_PACKAGE_INCLUDE_DEPENDS
         rclcpp
         cartesian_controller_base
         Eigen3
+        std_msgs
+        tf2
+        tf2_ros
+        tf2_geometry_msgs
 )
 
 ament_export_dependencies(
@@ -90,3 +99,18 @@ ament_export_libraries(
 )
 
 ament_package()
+
+
+add_executable(velocity_transformer_node src/velocity_transformer_node.cpp)
+
+ament_target_dependencies(velocity_transformer_node
+  rclcpp
+  std_msgs
+  tf2_geometry_msgs
+  tf2
+  tf2_ros
+)
+
+install(TARGETS velocity_transformer_node
+  DESTINATION lib/${PROJECT_NAME}
+)

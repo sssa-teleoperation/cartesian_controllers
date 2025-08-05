@@ -11,7 +11,7 @@ class ActualVelPublisher(Node):
 
         self.publisher_ = self.create_publisher(
             Float64MultiArray,
-            '/cartesian_motion_controller_silvestro/CartesianMotionControllerInput',
+            '/cartesian_motion_controller_silvestro/cartesian_input_sdr_reference',
             10
         )
 
@@ -26,13 +26,13 @@ class ActualVelPublisher(Node):
                 for row in reader:
                     self.data.append([
                         float(row['pos1']),
-                        float(row['pos3']),
                         float(row['pos2']),
-                        0.0,
-                        0.0,
-                        0.0
+                        float(row['pos3']),
+                        float(row['pos4']),
+                        float(row['pos5']),
+                        float(row['pos6'])
                     ])
-                    if row['phase_label'] == 'Carry 6':  # analize until grasp
+                    if row['phase_label'] == 'Carry 6':  # you can change the phase
                         break
 
             self.get_logger().info(f'Loaded {len(self.data)} rows from first trial.')
@@ -42,7 +42,7 @@ class ActualVelPublisher(Node):
             self.data = []
 
         self.index = 0
-        self.dt = 0.1  # 50 Hz
+        self.dt = 0.02  # 50 Hz
         self.timer = self.create_timer(self.dt, self.publish_next)
 
     def publish_next(self):
