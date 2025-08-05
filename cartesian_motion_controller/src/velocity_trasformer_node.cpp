@@ -24,11 +24,14 @@ public:
 
     RCLCPP_INFO(this->get_logger(), "Velocity transformer node started");
 
-    // trasform from silvestrobase_link to base_link
+    // Transform from sdr_reference to silvestrobase_link
     tf2::Quaternion q;
     q.setRPY(-1.57, 0.0, 1.57);
     tf2::Vector3 origin(0.0, 0.0, 0.1625);
     transform_ = tf2::Transform(q, origin);
+
+    // Offset of the end-effector point P(E-E) in sdr_reference
+    r_OP_in_A_ = tf2::Vector3(0.35, -0.06, 0.0);
   }
 
 private:
@@ -38,11 +41,15 @@ private:
       RCLCPP_WARN(this->get_logger(), "Received velocity message with less than 6 elements");
       return;
     }
-
-    tf2::Vector3 v_P_A(msg->data[0], msg->data[1], msg->data[2]);
+    
+    tf2::Vector3 v_O_A(msg->data[0], msg->data[1], msg->data[2]);
     tf2::Vector3 omega_A(msg->data[3], msg->data[4], msg->data[5]);
-    tf2::Vector3 r = transform_.getOrigin();
 
+    // Velocity of point P(E-E) in frame A (sdr_reference)
+    tf2::Vector3 v_P_A = v_O_A + omega_A.cross(r_OP_in_A_);
+
+    // Transform into frame B (silvestrobase_link)
+    tf2::Vector3 r = transform_.getOrigin();
     tf2::Vector3 v_origin = omega_A.cross(r);
     tf2::Vector3 v_P_B = transform_.getBasis().transpose() * (v_P_A - v_origin);
     tf2::Vector3 omega_B = transform_.getBasis().transpose() * omega_A;
@@ -56,10 +63,12 @@ private:
     pub_->publish(out);
   }
 
+
   rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr sub_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr pub_;
 
   tf2::Transform transform_;
+  tf2::Vector3 r_OP_in_A_;
 };
 
 int main(int argc, char * argv[])
