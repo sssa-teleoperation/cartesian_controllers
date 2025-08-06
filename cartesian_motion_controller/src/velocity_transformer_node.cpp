@@ -26,7 +26,7 @@ public:
 
     // Transform from sdr_reference to silvestrobase_link
     tf2::Quaternion q;
-    q.setRPY(0.0, 1.57, 1.57);
+    q.setRPY(-1.57, 0.0, 1.57);
     tf2::Vector3 origin(0.0, 0.0, 0.1625);
     transform_ = tf2::Transform(q, origin);
 
