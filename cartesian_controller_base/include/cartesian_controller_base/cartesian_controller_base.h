@@ -101,6 +101,11 @@ public:
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(
     const rclcpp_lifecycle::State & previous_state) override;
 
+    const std::vector<std::string> & getJointNames() const
+  {
+    return m_joint_names;
+  }
+
 protected:
   /**
      * @brief Write joint control commands to the real hardware

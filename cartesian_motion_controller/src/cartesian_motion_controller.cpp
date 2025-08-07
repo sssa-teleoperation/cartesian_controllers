@@ -52,7 +52,8 @@
 namespace cartesian_motion_controller
 {
 
-CartesianMotionController::CartesianMotionController() : Base::CartesianControllerBase() {}
+using Base = cartesian_controller_base::CartesianControllerBase;
+
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 CartesianMotionController::on_init()
@@ -108,7 +109,9 @@ CartesianMotionController::update(const rclcpp::Time & time,
     // Synchronize the internal model and the real robot
     Base::m_ik_solver->synchronizeJointPositions(Base::m_joint_state_pos_handles);
 
-    std::array<double, 6> cmd = m_latest_command;
+    std::array<double, 6> cmd;
+    std::copy_n(m_latest_command.begin(), 6, cmd.begin()); // not using 7th element
+
 
     KDL::Twist twist_cmd(
         KDL::Vector(cmd[0], cmd[1], cmd[2]),  // linear part
@@ -165,7 +168,7 @@ void CartesianMotionController::jointStateCallback(const sensor_msgs::msg::Joint
   if (!this->isActive() || msg->velocity.empty())
     return;
 
-  const auto& joint_names = Base::getJointNames();
+  const auto& joint_names = this->getJointNames();
   for (size_t i = 0; i < joint_names.size(); ++i)
   {
     auto it = std::find(msg->name.begin(), msg->name.end(), joint_names[i]);

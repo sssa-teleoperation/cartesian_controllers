@@ -162,6 +162,7 @@ public:
      */
   void updateKinematics();
   void setMeasuredVelocity(int joint_index, double value);
+  void updateKinematicsFromMeasuredVelocity();
 
 protected:
   /**
