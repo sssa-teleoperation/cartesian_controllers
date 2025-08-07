@@ -48,6 +48,7 @@
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/node.hpp"
+#include <geometry_msgs/msg/twist_stamped.hpp>
 
 namespace cartesian_controller_base
 {
@@ -114,12 +115,17 @@ bool IKSolver::init(std::shared_ptr<rclcpp_lifecycle::LifecycleNode> nh, const K
   m_current_accelerations.data = ctrl::VectorND::Zero(m_number_joints);
   m_last_positions.data = ctrl::VectorND::Zero(m_number_joints);
   m_last_velocities.data = ctrl::VectorND::Zero(m_number_joints);
+  m_measured_joint_velocities.data = ctrl::VectorND::Zero(m_number_joints);
+
   m_upper_pos_limits = upper_pos_limits;
   m_lower_pos_limits = lower_pos_limits;
 
   // Forward kinematics
   m_fk_pos_solver.reset(new KDL::ChainFkSolverPos_recursive(m_chain));
   m_fk_vel_solver.reset(new KDL::ChainFkSolverVel_recursive(m_chain));
+
+  m_measured_twist_pub_ = m_handle->create_publisher<geometry_msgs::msg::TwistStamped>(
+    std::string(m_handle->get_name()) + "/measured_twist", rclcpp::QoS(10));
 
   return true;
 }
@@ -152,6 +158,31 @@ void IKSolver::applyJointLimits()
     m_current_positions(i) =
       std::clamp(m_current_positions(i), m_lower_pos_limits(i), m_upper_pos_limits(i));
   }
+}
+
+void IKSolver::setMeasuredVelocity(int joint_index, double value)
+{
+  m_measured_joint_velocities(joint_index) = value;
+}
+
+void IKSolver::updateKinematicsFromMeasuredVelocity()
+{
+  KDL::FrameVel vel;
+  m_fk_vel_solver->JntToCart(KDL::JntArrayVel(m_current_positions, m_measured_joint_velocities), vel);
+  m_measured_cartesian_velocity = vel.deriv();
+
+  geometry_msgs::msg::TwistStamped msg;
+  msg.header.stamp = m_handle->now();
+  msg.header.frame_id = "silvestrobase_link";
+
+  msg.twist.linear.x = m_measured_cartesian_velocity.vel.x();
+  msg.twist.linear.y = m_measured_cartesian_velocity.vel.y();
+  msg.twist.linear.z = m_measured_cartesian_velocity.vel.z();
+  msg.twist.angular.x = m_measured_cartesian_velocity.rot.x();
+  msg.twist.angular.y = m_measured_cartesian_velocity.rot.y();
+  msg.twist.angular.z = m_measured_cartesian_velocity.rot.z();
+
+  m_measured_twist_pub_->publish(msg);
 }
 
 }  // namespace cartesian_controller_base

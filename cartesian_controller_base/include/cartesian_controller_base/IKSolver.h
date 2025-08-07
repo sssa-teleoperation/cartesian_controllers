@@ -50,6 +50,7 @@
 #include <kdl/chainfksolverpos_recursive.hpp>
 #include <kdl/chainfksolvervel_recursive.hpp>
 #include <kdl/chainjnttojacsolver.hpp>
+#include <kdl/jntarrayvel.hpp>
 #include <kdl/frames.hpp>
 #include <kdl/jacobian.hpp>
 #include <memory>
@@ -60,6 +61,8 @@
 #include "ROS2VersionConfig.h"
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
+#include <geometry_msgs/msg/twist_stamped.hpp>
+
 
 namespace cartesian_controller_base
 {
@@ -158,6 +161,7 @@ public:
      * kinematics.
      */
   void updateKinematics();
+  void setMeasuredVelocity(int joint_index, double value);
 
 protected:
   /**
@@ -207,6 +211,10 @@ protected:
   std::shared_ptr<KDL::ChainFkSolverVel_recursive> m_fk_vel_solver;
   KDL::Frame m_end_effector_pose;
   ctrl::Vector6D m_end_effector_vel;
+
+  KDL::JntArray m_measured_joint_velocities;
+  KDL::Twist m_measured_cartesian_velocity;
+  rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_measured_twist_pub_;
 };
 
 }  // namespace cartesian_controller_base
