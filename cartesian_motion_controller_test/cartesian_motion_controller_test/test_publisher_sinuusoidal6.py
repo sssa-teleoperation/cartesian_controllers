@@ -53,13 +53,12 @@ class TestPublisher(Node):
         msg = Float64MultiArray()
 
         vx = self.amp * np.sin(2 * np.pi * self.freq * elapsed_time)
-        # vy = self.amp * np.sin(2 * np.pi * self.freq * elapsed_time + np.pi/2)
-        # vz = self.amp * np.sin(2 * np.pi * self.freq * elapsed_time + np.pi)
+        vy = self.amp * np.sin(2 * np.pi * self.freq * elapsed_time + np.pi/2)
+        vz = self.amp * np.sin(2 * np.pi * self.freq * elapsed_time + np.pi)
 
-        # wx = self.ang_amp * np.sin(2 * np.pi * self.freq * elapsed_time)
-        # wy = self.ang_amp * np.sin(2 * np.pi * self.freq * elapsed_time + np.pi/2)
-        # wz = self.ang_amp * np.sin(2 * np.pi * self.freq * elapsed_time + np.pi)
-        vy=vz=wx=wy=wz=0.0  
+        wx = self.ang_amp * np.sin(2 * np.pi * self.freq * elapsed_time)
+        wy = self.ang_amp * np.sin(2 * np.pi * self.freq * elapsed_time + np.pi/2)
+        wz = self.ang_amp * np.sin(2 * np.pi * self.freq * elapsed_time + np.pi)
         msg.data = [vx, vy, vz, wx, wy, wz]
 
         self.publisher_.publish(msg)
