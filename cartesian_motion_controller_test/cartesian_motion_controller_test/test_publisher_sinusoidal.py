@@ -3,6 +3,7 @@ from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 import numpy as np
 import time
+import signal
 
 class TestPublisher(Node):
     def __init__(self):
@@ -22,8 +23,22 @@ class TestPublisher(Node):
 
         # Angular amplitude (just a small fixed value)
         self.ang_amp = 0.05
+        
+        # Add a flag to check if we're shutting down
+        self.is_shutting_down = False
+
+    def stop_motion(self):
+        # Publish zero velocities
+        msg = Float64MultiArray()
+        msg.data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.publisher_.publish(msg)
+        self.get_logger().info('Stopping motion - setting velocities to zero')
 
     def timer_callback(self):
+        if self.is_shutting_down:
+            self.stop_motion()
+            return
+
         elapsed_time = time.time() - self.start_time
 
         msg = Float64MultiArray()
@@ -40,12 +55,28 @@ class TestPublisher(Node):
 
         self.publisher_.publish(msg)
 
+def signal_handler(signum, frame):
+    # Mark the node as shutting down
+    if 'node' in globals():
+        node.is_shutting_down = True
+        node.stop_motion()
+    
 def main():
+    global node  # Make node global so signal handler can access it
     rclpy.init()
     node = TestPublisher()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    
+    # Set up signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    try:
+        rclpy.spin(node)
+    finally:
+        # Ensure we stop motion before shutting down
+        node.stop_motion()
+        node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
