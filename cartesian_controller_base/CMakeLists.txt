@@ -92,6 +92,7 @@ ament_target_dependencies(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen )
 
 add_library(ik_solvers SHARED
+  src/IKSolver.cpp
   src/ForwardDynamicsSolver.cpp
   src/JacobianTransposeSolver.cpp
   src/DampedLeastSquaresSolver.cpp
