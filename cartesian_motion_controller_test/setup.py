@@ -36,7 +36,7 @@ setup(
             'marker_publisher2 = cartesian_motion_controller_test.marker_pubblisher2:main',
             'actualvel_publisher2 = cartesian_motion_controller_test.actualvel_publisher2:main',
             'test = cartesian_motion_controller_test.test:main',
-            'test_publisher_sinuusoidal6 = cartesian_motion_controller_test.test_publisher_sinuusoidal6:main',
+            'test_publisher_sinusoidal6 = cartesian_motion_controller_test.test_publisher_sinusoidal6:main',
         ],
     },
 )

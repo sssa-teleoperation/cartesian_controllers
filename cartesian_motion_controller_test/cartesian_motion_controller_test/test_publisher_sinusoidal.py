@@ -27,25 +27,16 @@ class TestPublisher(Node):
         # Add a flag to check if we're shutting down
         self.is_shutting_down = False
 
-        # Add counter for stop messages
-        self.stop_counter = 0
-        self.max_stop_messages = 4  # Number of zero velocity messages to send
-
     def stop_motion(self):
         # Publish zero velocities
-        if self.stop_counter < self.max_stop_messages:
-            msg = Float64MultiArray()
-            msg.data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-            self.publisher_.publish(msg)
-            self.get_logger().info(f'Stopping motion - sending zero velocities ({self.stop_counter + 1}/{self.max_stop_messages})')
-            self.stop_counter += 1
+        msg = Float64MultiArray()
+        msg.data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.publisher_.publish(msg)
+        self.get_logger().info('Stopping motion - setting velocities to zero')
 
     def timer_callback(self):
         if self.is_shutting_down:
             self.stop_motion()
-            if self.stop_counter >= self.max_stop_messages:
-                self.destroy_node()
-                rclpy.shutdown()
             return
 
         elapsed_time = time.time() - self.start_time
