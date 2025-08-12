@@ -49,6 +49,7 @@
 
 #include "std_msgs/msg/float64_multi_array.hpp"
 #include <array>
+#include "sensor_msgs/msg/joint_state.hpp"
 
 namespace cartesian_motion_controller
 {
@@ -79,9 +80,14 @@ protected:
   
 
   void decoderCommandCallback(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
-   std::array<double, 6> m_latest_command{}; 
+
+  void jointStateCallback(
+    const sensor_msgs::msg::JointState::SharedPtr msg);
   
-   rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr m_decoder_subscr;
+  std::array<double, 6> m_latest_command{}; 
+
+  rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr m_decoder_subscr;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_subscr;
 };
 
 }  // namespace cartesian_motion_controller

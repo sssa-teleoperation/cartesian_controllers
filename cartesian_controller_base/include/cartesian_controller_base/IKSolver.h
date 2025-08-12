@@ -61,6 +61,9 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
+#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <rclcpp/publisher.hpp>
+
 namespace cartesian_controller_base
 {
 /*! \brief Base class to compute manipulator joint motion from Cartesian force inputs.
@@ -158,6 +161,10 @@ public:
      * kinematics.
      */
   void updateKinematics();
+  void setMeasuredVelocity(int joint_index, double value);
+  void updateKinematicsFromMeasuredVelocity(); 
+
+  
 
 protected:
   /**
@@ -207,6 +214,18 @@ protected:
   std::shared_ptr<KDL::ChainFkSolverVel_recursive> m_fk_vel_solver;
   KDL::Frame m_end_effector_pose;
   ctrl::Vector6D m_end_effector_vel;
+
+  // Measured twist
+  std::shared_ptr<KDL::ChainJntToJacSolver> m_jac_solver;
+  KDL::Jacobian m_jacobian;
+
+  //publisher for measured twist
+  ctrl::Vector6D m_measured_twist {ctrl::Vector6D::Zero()};
+
+  //frame id for measured twist 
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_measured_twist_pub;
+
+  std::string m_measured_twist_frame_id {"silvestrobase_link"};
 };
 
 }  // namespace cartesian_controller_base

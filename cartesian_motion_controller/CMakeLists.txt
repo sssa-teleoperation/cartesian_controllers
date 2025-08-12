@@ -19,14 +19,20 @@ find_package(std_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 
 # Convenience variable for dependencies
 set(THIS_PACKAGE_INCLUDE_DEPENDS
         rclcpp
+        rclcpp_lifecycle
         cartesian_controller_base
         Eigen3
         std_msgs
+        geometry_msgs
+        sensor_msgs
         tf2
         tf2_ros
         tf2_geometry_msgs
@@ -109,6 +115,8 @@ ament_target_dependencies(velocity_transformer_node
   tf2_geometry_msgs
   tf2
   tf2_ros
+  geometry_msgs
+  sensor_msgs
 )
 
 install(TARGETS velocity_transformer_node

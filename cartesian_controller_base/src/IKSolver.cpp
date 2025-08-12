@@ -49,6 +49,9 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/node.hpp"
 
+#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <Eigen/Core>
+
 namespace cartesian_controller_base
 {
 IKSolver::IKSolver() {}
@@ -121,9 +124,51 @@ bool IKSolver::init(std::shared_ptr<rclcpp_lifecycle::LifecycleNode> nh, const K
   m_fk_pos_solver.reset(new KDL::ChainFkSolverPos_recursive(m_chain));
   m_fk_vel_solver.reset(new KDL::ChainFkSolverVel_recursive(m_chain));
 
+  m_jac_solver = std::make_shared<KDL::ChainJntToJacSolver>(m_chain);
+  m_jacobian= KDL::Jacobian(m_number_joints);
+
+  m_measured_twist_pub = m_handle->create_publisher<geometry_msgs::msg::TwistStamped>(
+    "measured_twist", rclcpp::QoS(10));
+
   return true;
 }
 
+void IKSolver::setMeasuredVelocity(int joint_index, double value)
+{
+  if (joint_index < 0 || joint_index >= m_number_joints) return;
+  m_measured_twist(joint_index) = value;
+}
+
+void IKSolver::updateKinematicsFromMeasuredVelocity()
+{
+  //aggiorno posa
+  m_fk_pos_solver->JntToCart(m_current_positions, m_end_effector_pose);
+  //calcolo Jacobiana
+  m_jac_solver->JntToJac(m_current_positions, m_jacobian);
+
+  const Eigen::Matrix<double,6,Eigen::Dynamic>& J = m_jacobian.data;
+  const Eigen::VectorXd& qdot = m_current_velocities.data;
+
+  Eigen::Matrix<double,6,1> xdot = J * qdot;
+
+  for (int i = 0; i < 6; ++i) m_measured_twist[i] = xdot(i);
+
+  //pub twiststamped
+  if(m_measured_twist_pub){
+    geometry_msgs::msg::TwistStamped msg;
+    msg.header.stamp = m_handle->now();
+    msg.header.frame_id = m_measured_twist_frame_id;
+    msg.twist.linear.x = m_measured_twist[0];
+    msg.twist.linear.y = m_measured_twist[1];
+    msg.twist.linear.z = m_measured_twist[2];
+    msg.twist.angular.x = m_measured_twist[3];
+    msg.twist.angular.y = m_measured_twist[4];
+    msg.twist.angular.z = m_measured_twist[5];
+    
+    m_measured_twist_pub->publish(msg);
+  }
+  
+}
 void IKSolver::updateKinematics()
 {
   // Pose w. r. t. base

@@ -48,6 +48,7 @@
 #include "controller_interface/controller_interface.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
 
 namespace cartesian_motion_controller
 {
@@ -78,6 +79,9 @@ CartesianMotionController::on_configure(const rclcpp_lifecycle::State & previous
   m_decoder_subscr = get_node()->create_subscription<std_msgs::msg::Float64MultiArray>(
     get_node()->get_name() + std::string("/CartesianMotionControllerInput"), 3,
     std::bind(&CartesianMotionController::decoderCommandCallback, this, std::placeholders::_1));
+
+  m_joint_state_subscr = get_node()->create_subscription<sensor_msgs::msg::JointState>("/joint_states", 3,
+    std::bind(&CartesianMotionController::jointStateCallback, this, std::placeholders::_1));
 
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -154,6 +158,20 @@ void CartesianMotionController::decoderCommandCallback(
     std::min(msg->data.size(), size_t(7)),
     m_latest_command.begin()
   );
+}
+
+void CartesianMotionController::jointStateCallback(
+  const sensor_msgs::msg::JointState::SharedPtr msg)
+{
+  if (!this->isActive()) return;
+  
+  const auto n = std::min<size_t>(msg->velocity.size(), Base::m_ik_solver->getPositions().rows());
+
+  for (size_t i = 0; i < n; ++i) {
+    Base::m_ik_solver->setMeasuredVelocity(static_cast<int>(i), msg->velocity[i]);
+  }
+
+  Base::m_ik_solver->updateKinematicsFromMeasuredVelocity();
 }
 
 
