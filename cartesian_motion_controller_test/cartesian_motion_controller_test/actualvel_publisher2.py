@@ -32,7 +32,7 @@ class ActualVelPublisher(Node):
                         float(row['pos5']),
                         float(row['pos6'])
                     ])
-                    if row['phase_label'] == 'Carry 6':  # you can change the phase
+                    if row['phase_label'] == 'SnapTo 2':  # you can change the phase
                         break
 
             self.get_logger().info(f'Loaded {len(self.data)} rows from first trial.')
