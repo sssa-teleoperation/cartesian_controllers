@@ -56,15 +56,15 @@ class MarkerPublisher(Node):
         eesdr_marker.id = 101
         eesdr_marker.type = Marker.SPHERE
         eesdr_marker.action = Marker.ADD
-        eesdr_marker.pose.position.x = -0.06
-        eesdr_marker.pose.position.y = 0.0
-        eesdr_marker.pose.position.z = -0.35
+        eesdr_marker.pose.position.x = 0.0
+        eesdr_marker.pose.position.y = -0.35
+        eesdr_marker.pose.position.z = -0.06
         eesdr_marker.pose.orientation.w = 1.0
-        eesdr_marker.scale.x = eesdr_marker.scale.y = eesdr_marker.scale.z = 0.05
+        eesdr_marker.scale.x = eesdr_marker.scale.y = eesdr_marker.scale.z = 0.05 #diameter 
         eesdr_marker.color.r = 0.5
         eesdr_marker.color.g = 0.0
         eesdr_marker.color.b = 1.0
-        eesdr_marker.color.a = 1.0
+        eesdr_marker.color.a = 0.5
         eesdr_marker.lifetime = duration
         eesdr_marker.text = "initial position e-e"  
         marker_array.markers.append(eesdr_marker)

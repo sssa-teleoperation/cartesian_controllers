@@ -1,4 +1,4 @@
-// try to convert the velocity in input from the decoder with a different sdr ( to put the silvestrobase_link such as the base_link)
+// Rotate decoder velocities from sdr_reference (A) to silvestrobase_link (B)
 
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
@@ -6,6 +6,8 @@
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <cmath>
 
 class VelocityTransformerNode : public rclcpp::Node
 {
@@ -22,16 +24,17 @@ public:
     pub_ = this->create_publisher<std_msgs::msg::Float64MultiArray>(
       "/cartesian_motion_controller_silvestro/CartesianMotionControllerInput", 10);
 
-    RCLCPP_INFO(this->get_logger(), "Velocity transformer node started");
+    RCLCPP_INFO(this->get_logger(), "Velocity transformer node started (rotation only)");
 
-    // Transform from sdr_reference to silvestrobase_link
+    // --- ROTAZIONE A->B ---
+    // Corrispondenza assi data: x_A = -y_B, y_A = +z_B, z_A = -x_B
+    // Risultato: R_BA = [[0, 0,-1],
+    //                    [-1,0, 0],
+    //                    [0, 1, 0]]
+    // In ROS (ZYX) gli angoli equivalenti: roll=+pi/2, pitch=0, yaw=-pi/2
     tf2::Quaternion q;
-    q.setRPY(-1.57, 0.0, 1.57);
-    tf2::Vector3 origin(0.0, 0.0, 0.1625);
-    transform_ = tf2::Transform(q, origin);
-
-    // Offset of the end-effector point P(E-E) in sdr_reference
-    r_OP_in_A_ = tf2::Vector3(0.35, -0.06, 0.0);
+    q.setRPY(+M_PI/2.0, 0.0, -M_PI/2.0);        // roll, pitch, yaw
+    R_BA_ = tf2::Matrix3x3(q);
   }
 
 private:
@@ -41,34 +44,24 @@ private:
       RCLCPP_WARN(this->get_logger(), "Received velocity message with less than 6 elements");
       return;
     }
-    
-    tf2::Vector3 v_O_A(msg->data[0], msg->data[1], msg->data[2]);
-    tf2::Vector3 omega_A(msg->data[3], msg->data[4], msg->data[5]);
 
-    // Velocity of point P(E-E) in frame A (sdr_reference)
-    tf2::Vector3 v_P_A = v_O_A + omega_A.cross(r_OP_in_A_);
+    // Velocità lineare e angolare in A (sdr_reference)
+    tf2::Vector3 v_A(msg->data[0], msg->data[1], msg->data[2]);
+    tf2::Vector3 w_A(msg->data[3], msg->data[4], msg->data[5]);
 
-    // Transform into frame B (silvestrobase_link)
-    tf2::Vector3 r = transform_.getOrigin();
-    tf2::Vector3 v_origin = omega_A.cross(r);
-    tf2::Vector3 v_P_B = transform_.getBasis().transpose() * (v_P_A - v_origin);
-    tf2::Vector3 omega_B = transform_.getBasis().transpose() * omega_A;
+    // --- SOLO ROTAZIONE: v_B = R_BA * v_A ; w_B = R_BA * w_A ---
+    tf2::Vector3 v_B = R_BA_ * v_A;
+    tf2::Vector3 w_B = R_BA_ * w_A;
 
     std_msgs::msg::Float64MultiArray out;
-    out.data = {
-      v_P_B.x(), v_P_B.y(), v_P_B.z(),
-      omega_B.x(), omega_B.y(), omega_B.z()
-    };
-
+    out.data = { v_B.x(), v_B.y(), v_B.z(), w_B.x(), w_B.y(), w_B.z() };
     pub_->publish(out);
   }
-
 
   rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr sub_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr pub_;
 
-  tf2::Transform transform_;
-  tf2::Vector3 r_OP_in_A_;
+  tf2::Matrix3x3 R_BA_;
 };
 
 int main(int argc, char * argv[])
