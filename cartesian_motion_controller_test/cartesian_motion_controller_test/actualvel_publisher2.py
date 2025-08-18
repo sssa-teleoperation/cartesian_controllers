@@ -20,29 +20,29 @@ class ActualVelPublisher(Node):
             csv_path = os.path.join(package_share_dir, 'data', 'actualvel_no_presentation_with_trials.csv')
 
             self.data = []
-
             with open(csv_path, 'r') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    self.data.append([
-                        float(row['pos1']),
-                        float(row['pos2']),
-                        float(row['pos3']),
-                        float(row['pos4']),
-                        float(row['pos5']),
-                        float(row['pos6'])
-                    ])
-                    if row['phase_label'] == 'SnapTo 2':  # you can change the phase
+                    if row['phase_label'] == 'SnapTo 2':
+                        self.data.append([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
                         break
-
-            self.get_logger().info(f'Loaded {len(self.data)} rows from first trial.')
+                    else:
+                        self.data.append([
+                            float(row['pos1']),
+                            float(row['pos2']),
+                            float(row['pos3']),
+                            float(row['pos4']),
+                            float(row['pos5']),
+                            float(row['pos6'])
+                        ])
+            self.get_logger().info(f'Loaded {len(self.data)} rows')
 
         except Exception as e:
             self.get_logger().error(f'Could not read CSV: {e}')
             self.data = []
 
         self.index = 0
-        self.dt = 0.02  # 50 Hz
+        self.dt = 0.02
         self.timer = self.create_timer(self.dt, self.publish_next)
 
     def publish_next(self):
@@ -50,14 +50,16 @@ class ActualVelPublisher(Node):
             row = self.data[self.index]
             self.index += 1
         else:
-            row = self.data[-1]
+            self.get_logger().info('Stop.')
+            self.timer.cancel()
+            return
 
         msg = Float64MultiArray()
         msg.data = row
         self.publisher_.publish(msg)
 
-        self.get_logger().info(f'[{self.index-1 if self.index<=len(self.data) else len(self.data)-1}] Published: {["{:.3f}".format(x) for x in row]}')
-            
+        idx = self.index - 1 if self.index <= len(self.data) else len(self.data) - 1
+        self.get_logger().info(f'[{idx}] Published: {[f"{x:.3f}" for x in row]}')
 
 
 def main(args=None):
