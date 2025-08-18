@@ -111,7 +111,7 @@ class MarkerPublisher(Node):
             marker_array.markers.append(markerA)
 
         self.marker_pub.publish(marker_array)
-        self.get_logger().info('Published all markers (rotated A→B, frame=silvestrobase_link)')
+        self.get_logger().info('Published all markers')
 
         # Cancel timer so this runs only once
         if hasattr(self, 'timer'):
