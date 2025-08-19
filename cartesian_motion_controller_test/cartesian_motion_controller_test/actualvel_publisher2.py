@@ -23,7 +23,7 @@ class ActualVelPublisher(Node):
             with open(csv_path, 'r') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    if row['phase_label'] == 'SnapTo 2':
+                    if row['phase_label'] == 'Release 54':
                         self.data.append([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
                         break
                     else:

@@ -26,12 +26,12 @@ public:
 
     RCLCPP_INFO(this->get_logger(), "Velocity transformer node started (rotation only)");
 
-    // --- ROTAZIONE A->B ---
-    // Corrispondenza assi data: x_A = -y_B, y_A = +z_B, z_A = -x_B
-    // Risultato: R_BA = [[0, 0,-1],
-    //                    [-1,0, 0],
-    //                    [0, 1, 0]]
-    // In ROS (ZYX) gli angoli equivalenti: roll=+pi/2, pitch=0, yaw=-pi/2
+    // Rotation Matrix A->B 
+    // x_A = -y_B, y_A = +z_B, z_A = -x_B
+    //  R_BA = [[0, 0,-1],
+    //          [-1,0, 0],
+    //          [0, 1, 0]]
+    // In ROS (ZYX) roll=+pi/2, pitch=0, yaw=-pi/2
     tf2::Quaternion q;
     q.setRPY(+M_PI/2.0, 0.0, -M_PI/2.0);        // roll, pitch, yaw
     R_BA_ = tf2::Matrix3x3(q);
@@ -45,11 +45,11 @@ private:
       return;
     }
 
-    // Velocità lineare e angolare in A (sdr_reference)
+    // Assuming msg->data contains [v_A.x, v_A.y, v_A.z, w_A.x, w_A.y, w_A.z]
     tf2::Vector3 v_A(msg->data[0], msg->data[1], msg->data[2]);
     tf2::Vector3 w_A(msg->data[3], msg->data[4], msg->data[5]);
 
-    // --- SOLO ROTAZIONE: v_B = R_BA * v_A ; w_B = R_BA * w_A ---
+    // Transform to B (silvestrobase_link)
     tf2::Vector3 v_B = R_BA_ * v_A;
     tf2::Vector3 w_B = R_BA_ * w_A;
 
