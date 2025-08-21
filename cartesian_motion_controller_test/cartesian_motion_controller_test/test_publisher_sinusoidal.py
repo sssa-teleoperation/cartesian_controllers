@@ -43,8 +43,8 @@ class TestPublisher(Node):
         elapsed_time = time.time() - self.start_time
         msg = Float64MultiArray()
 
-        vx = self.amp * np.sin(2 * np.pi * self.freq * elapsed_time)
-        vy=vz=wx=wy=wz=0.0 
+        vz = self.amp * np.sin(2 * np.pi * self.freq * elapsed_time)
+        vy=vx=wx=wy=wz=0.0 
        
         msg.data = [vx, vy, vz, wx, wy, wz]
         self.publisher_.publish(msg)
