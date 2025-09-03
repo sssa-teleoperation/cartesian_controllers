@@ -2,8 +2,8 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 
-RATE_HZ = 50.0          
-K_FRAMES = 4            # interpolazione in K frames, parametro modificabile
+RATE_HZ = 500.0          
+K_FRAMES = 6            # interpolazione in K frames, parametro modificabile
 
 class CartesianInterpolator(Node):
     def __init__(self):
@@ -22,7 +22,7 @@ class CartesianInterpolator(Node):
         self.frames_remaining = 0 # frames rimanenti per arrivare a target
         
         self.timer = self.create_timer(1.0/RATE_HZ, self.on_timer) #timer a 50Hz
-        #self.get_logger().info(f'Interpolator @ {RATE_HZ:.0f}Hz, K={K_FRAMES}')
+        self.get_logger().info(f'Interpolator @ {RATE_HZ:.0f}Hz, K={K_FRAMES}')
 
     #callback for new input
     def on_input(self, msg):
