@@ -27,7 +27,7 @@ class TestPublisher(Node):
   
         if elapsed_time < 5.0: #gradino
             vz= 0.0
-        elif elapsed_time < 10.0:
+        elif elapsed_time < 7.0:
             vz= 0.1    
         else:
             vz = 0.0

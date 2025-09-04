@@ -21,7 +21,7 @@ class TestPublisher(Node):
         self.start_time = time.time()
 
         self.freq = 0.2  # Hz
-        self.max_displacement = 0.1
+        self.max_displacement = 0.05  # meters, spostamento massimo
         self.amp = self.max_displacement * np.pi * self.freq
         self.ang_amp = 0.05
 
