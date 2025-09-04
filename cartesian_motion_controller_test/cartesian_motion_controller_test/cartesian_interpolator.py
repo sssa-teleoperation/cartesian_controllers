@@ -10,11 +10,11 @@ class CartesianInterpolator(Node):
         super().__init__('cartesian_interpolator')
         self.sub = self.create_subscription(
             Float64MultiArray,
-            '/cartesian_motion_controller_silvestro/cartesian_input_sdr_reference',
+            '/cartesian_motion_controller_silvestro/cartesian_input_base',
             self.on_input, 10)
         self.pub = self.create_publisher(
             Float64MultiArray,
-            '/cartesian_motion_controller_silvestro/cartesian_input_sdr_reference_interp',
+            '/cartesian_motion_controller_silvestro/CartesianMotionControllerInput',
             10)
         #internal state
         self.current = None   # ultimo pubblicato (len=6)
