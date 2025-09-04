@@ -82,10 +82,10 @@ class MarkerPublisher(Node):
             marker.pose.position.z = float(zB)
             marker.pose.orientation.w = 1.0
             marker.scale.x = marker.scale.y = marker.scale.z = 0.05
-            marker.color.r = 0.0
-            marker.color.g = 0.0
-            marker.color.b = 1.0
-            marker.color.a = 0.5
+            marker.color.r = 0.95
+            marker.color.g = 0.72
+            marker.color.b = 0.12
+            marker.color.a = 0.90
             marker.lifetime = duration
             marker_array.markers.append(marker)
 

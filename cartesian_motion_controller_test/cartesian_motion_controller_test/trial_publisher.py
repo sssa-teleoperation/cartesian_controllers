@@ -12,7 +12,7 @@ class TrialPublisher(Node):
 
         self.publisher_ = self.create_publisher(
             Float64MultiArray,
-            '/cartesian_motion_controller_silvestro/cartesian_input_sdr_reference',
+            '/cartesian_motion_controller_silvestro/cartesian_input_sdr_reference_interp',
             10
         )
 
