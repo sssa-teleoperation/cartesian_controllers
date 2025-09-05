@@ -220,12 +220,12 @@ protected:
   KDL::Jacobian m_jacobian;
 
   //publisher for measured twist
-  ctrl::Vector6D m_measured_twist {ctrl::Vector6D::Zero()};
+  KDL::JntArray m_measured_joint_velocities;  // qdot misurata (dimensione = m_number_joints)
 
   //frame id for measured twist 
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_measured_twist_pub;
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_measured_twist_pub; //pubblica la twist cartesiana
 
-  std::string m_measured_twist_frame_id {"silvestrobase_link"};
+  std::string m_measured_twist_frame_id {"silvestrobase_link"}; //in quale frame e' espressa la twist
 };
 
 }  // namespace cartesian_controller_base

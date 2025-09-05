@@ -125,7 +125,11 @@ bool IKSolver::init(std::shared_ptr<rclcpp_lifecycle::LifecycleNode> nh, const K
   m_fk_vel_solver.reset(new KDL::ChainFkSolverVel_recursive(m_chain));
 
   m_jac_solver = std::make_shared<KDL::ChainJntToJacSolver>(m_chain);
-  m_jacobian= KDL::Jacobian(m_number_joints);
+  m_jacobian   = KDL::Jacobian(m_number_joints);
+
+  m_measured_joint_velocities = KDL::JntArray(m_number_joints);
+  for (int i = 0; i < m_number_joints; ++i) { m_measured_joint_velocities(i)= 0.0;
+  } //
 
   m_measured_twist_pub = m_handle->create_publisher<geometry_msgs::msg::TwistStamped>(
     "measured_twist", rclcpp::QoS(10));
@@ -136,7 +140,7 @@ bool IKSolver::init(std::shared_ptr<rclcpp_lifecycle::LifecycleNode> nh, const K
 void IKSolver::setMeasuredVelocity(int joint_index, double value)
 {
   if (joint_index < 0 || joint_index >= m_number_joints) return;
-  m_measured_twist(joint_index) = value;
+  m_measured_joint_velocities(joint_index) = value;
 }
 
 void IKSolver::updateKinematicsFromMeasuredVelocity()
@@ -146,40 +150,30 @@ void IKSolver::updateKinematicsFromMeasuredVelocity()
   //calcolo Jacobiana
   m_jac_solver->JntToJac(m_current_positions, m_jacobian);
 
+  //qdot uguale alle velocita misurate
+  Eigen::VectorXd qdot(m_number_joints);
+  for(int i =0; i < m_number_joints; ++i) {
+    qdot(i) = m_measured_joint_velocities(i); 
+  }
+
+  //xdot=j*qdot
   const Eigen::Matrix<double,6,Eigen::Dynamic>& J = m_jacobian.data;
-  Eigen::VectorXd qdot(m_number_joints);  
-  qdot.setZero(); 
-  qdot(0) = m_measured_twist(8);
-  qdot(1) = m_measured_twist(7);
-  qdot(2) = m_measured_twist(0);
-  qdot(3) = m_measured_twist(9);
-  qdot(4) = m_measured_twist(10);
-  qdot(5) = m_measured_twist(11); 
-  // for (int i = 0; i < m_number_joints; ++i) {
-  //     qdot(i) = m_measured_twist(i);
-  // }
+  Eigen::Matrix<double,6,1> xdot= J * qdot;
 
-  Eigen::Matrix<double,6,1> xdot = J * qdot;
-
-  //for (int i = 0; i < 6; ++i) m_measured_twist[i] = xdot(i);
-
-  //pub twiststamped
-  if(m_measured_twist_pub){
+  if (m_measured_twist_pub) {
     geometry_msgs::msg::TwistStamped msg;
     msg.header.stamp = m_handle->now();
     msg.header.frame_id = m_measured_twist_frame_id;
-    msg.twist.linear.x = xdot[0];
-    msg.twist.linear.y = xdot[1];
-    msg.twist.linear.z = xdot[2];
-    msg.twist.angular.x = xdot[3];
-    msg.twist.angular.y = xdot[4];
-    msg.twist.angular.z = xdot[5];
-
-    
+    msg.twist.linear.x =  xdot(0);
+    msg.twist.linear.y =  xdot(1);
+    msg.twist.linear.z =  xdot(2);
+    msg.twist.angular.x = xdot(3);
+    msg.twist.angular.y = xdot(4);
+    msg.twist.angular.z = xdot(5);
     m_measured_twist_pub->publish(msg);
   }
-  
 }
+
 void IKSolver::updateKinematics()
 {
   // Pose w. r. t. base

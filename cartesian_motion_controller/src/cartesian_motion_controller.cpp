@@ -156,7 +156,7 @@ void CartesianMotionController::decoderCommandCallback(
   // Copy the command data
   std::copy_n(
     msg->data.begin(),
-    std::min(msg->data.size(), size_t(7)),
+    std::min(msg->data.size(), size_t(6)),
     m_latest_command.begin()
   );
 }
@@ -165,14 +165,19 @@ void CartesianMotionController::jointStateCallback(
   const sensor_msgs::msg::JointState::SharedPtr msg)
 {
   if (!this->isActive()) return;
-  
-  const auto n = std::min<size_t>(msg->velocity.size(), Base::m_ik_solver->getPositions().rows());
+  if (msg->velocity.size() <=11) return; 
 
-  for (size_t i = 0; i < n; ++i) {
-    Base::m_ik_solver->setMeasuredVelocity(static_cast<int>(i), msg->velocity[i]);
+    // prendi solo questi 6 giunti: 8,7,0,9,10,11 (/che corrispondono a pan, lift elbow- silvestrowrist_1_joint silvestrowrist_2_joint silvestrowrist_3_joint)
+  const std::array<int,6> pick = {8, 7, 0, 9, 10, 11};
+
+  for (size_t k = 0; k < pick.size(); ++k) { //k indice nel solver corretto, 0=pan;..
+    const int i = pick[k]; //indice messaggio jointstates
+    double v = msg->velocity[i];
+    if (std::isnan(v) || std::isinf(v)) v = 0.0; //leggo velocita e se e un msg nan o inf la metto a 0
+    Base::m_ik_solver->setMeasuredVelocity(static_cast<int>(k), v); // passo v al solver
   }
-
-  Base::m_ik_solver->updateKinematicsFromMeasuredVelocity();
+    // calcola xdot e pubblica twiststamped
+    Base::m_ik_solver->updateKinematicsFromMeasuredVelocity();
 }
 
 
