@@ -147,23 +147,34 @@ void IKSolver::updateKinematicsFromMeasuredVelocity()
   m_jac_solver->JntToJac(m_current_positions, m_jacobian);
 
   const Eigen::Matrix<double,6,Eigen::Dynamic>& J = m_jacobian.data;
-  const Eigen::VectorXd& qdot = m_current_velocities.data;
+  Eigen::VectorXd qdot(m_number_joints);  
+  qdot.setZero(); 
+  qdot(0) = m_measured_twist(9);
+  qdot(1) = m_measured_twist(0);
+  qdot(2) = m_measured_twist(8);
+  qdot(3) = m_measured_twist(10);
+  qdot(4) = m_measured_twist(11);
+  qdot(5) = m_measured_twist(12); 
+  // for (int i = 0; i < m_number_joints; ++i) {
+  //     qdot(i) = m_measured_twist(i);
+  // }
 
   Eigen::Matrix<double,6,1> xdot = J * qdot;
 
-  for (int i = 0; i < 6; ++i) m_measured_twist[i] = xdot(i);
+  //for (int i = 0; i < 6; ++i) m_measured_twist[i] = xdot(i);
 
   //pub twiststamped
   if(m_measured_twist_pub){
     geometry_msgs::msg::TwistStamped msg;
     msg.header.stamp = m_handle->now();
     msg.header.frame_id = m_measured_twist_frame_id;
-    msg.twist.linear.x = m_measured_twist[0];
-    msg.twist.linear.y = m_measured_twist[1];
-    msg.twist.linear.z = m_measured_twist[2];
-    msg.twist.angular.x = m_measured_twist[3];
-    msg.twist.angular.y = m_measured_twist[4];
-    msg.twist.angular.z = m_measured_twist[5];
+    msg.twist.linear.x = xdot[0];
+    msg.twist.linear.y = xdot[1];
+    msg.twist.linear.z = xdot[2];
+    msg.twist.angular.x = xdot[3];
+    msg.twist.angular.y = xdot[4];
+    msg.twist.angular.z = xdot[5];
+
     
     m_measured_twist_pub->publish(msg);
   }

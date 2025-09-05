@@ -126,6 +126,7 @@ CartesianMotionController::update(const rclcpp::Time & time,
     Base::computeJointControlCmds(motion_error, period);
     Base::writeJointControlCmds();
 
+     
     return controller_interface::return_type::OK;
 }
 
