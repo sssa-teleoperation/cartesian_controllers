@@ -149,12 +149,12 @@ void IKSolver::updateKinematicsFromMeasuredVelocity()
   const Eigen::Matrix<double,6,Eigen::Dynamic>& J = m_jacobian.data;
   Eigen::VectorXd qdot(m_number_joints);  
   qdot.setZero(); 
-  qdot(0) = m_measured_twist(9);
-  qdot(1) = m_measured_twist(0);
-  qdot(2) = m_measured_twist(8);
-  qdot(3) = m_measured_twist(10);
-  qdot(4) = m_measured_twist(11);
-  qdot(5) = m_measured_twist(12); 
+  qdot(0) = m_measured_twist(8);
+  qdot(1) = m_measured_twist(7);
+  qdot(2) = m_measured_twist(0);
+  qdot(3) = m_measured_twist(9);
+  qdot(4) = m_measured_twist(10);
+  qdot(5) = m_measured_twist(11); 
   // for (int i = 0; i < m_number_joints; ++i) {
   //     qdot(i) = m_measured_twist(i);
   // }
