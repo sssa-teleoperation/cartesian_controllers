@@ -7,8 +7,8 @@ import csv
 import math
 
 #  CONFIGURAZIONE FISSA (hardcoded) 
-START_LABEL       = "None 1"
-END_LABEL         = "Grasp 2"
+START_LABEL       = "Grasp 6"
+END_LABEL         = "Grasp 7"
 INCLUDE_START     = True   # includi la riga con START_LABEL
 INCLUDE_END       = True   # includi la riga con END_LABEL
 CASE_INSENSITIVE  = True   # confronta etichette in modo case-insensitive
