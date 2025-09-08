@@ -3,8 +3,8 @@ from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 import math
 
-RATE_HZ  = 500.0        # frequenza di pubblicazione dell'interpolato 
-K_FRAMES = 10           # numero di step per arrivare al prossimo target
+RATE_HZ  = 1000.0        # frequenza di pubblicazione dell'interpolato 
+K_FRAMES = 20           # numero di step per arrivare al prossimo target
 EPS_LIN  = 1e-4         # soglia: variazione “reale” su vx,vy,vz
 EPS_ANG  = 1e-4         # soglia: variazione “reale” su wx,wy,wz
 
