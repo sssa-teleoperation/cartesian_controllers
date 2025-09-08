@@ -8,7 +8,7 @@ rosbag2_bagfile_information:
   message_count: 20964
   topics_with_message_count:
     - topic_metadata:
-        name: /cartesian_motion_controller_silvestro/cartesian_input_sdr_reference
+        name: input_raw
         type: std_msgs/msg/Float64MultiArray
         serialization_format: cdr
         offered_qos_profiles:

@@ -18,11 +18,11 @@ public:
     using std::placeholders::_1;
 
     sub_ = this->create_subscription<std_msgs::msg::Float64MultiArray>(
-      "/cartesian_motion_controller_silvestro/cartesian_input_sdr_reference", 10,
+      "input_raw", 10,
       std::bind(&VelocityTransformerNode::callback, this, _1));
 
     pub_ = this->create_publisher<std_msgs::msg::Float64MultiArray>(
-      "/cartesian_motion_controller_silvestro/cartesian_input_base", 10);
+      "/input_in_robotframe", 10);
 
     RCLCPP_INFO(this->get_logger(), "Velocity transformer node started (rotation only)");
 

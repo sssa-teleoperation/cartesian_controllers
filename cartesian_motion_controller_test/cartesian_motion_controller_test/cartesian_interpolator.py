@@ -15,7 +15,7 @@ class CartesianInterpolator(Node):
 
         self.sub = self.create_subscription(
             Float64MultiArray,
-            '/cartesian_motion_controller_silvestro/cartesian_input_base',
+            '/input_in_robotframe',
             self.on_input,
             10
         )
