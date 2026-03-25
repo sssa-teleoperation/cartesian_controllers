@@ -101,16 +101,16 @@ ament_export_libraries(
 ament_package()
 
 
-add_executable(velocity_transformer_node src/velocity_transformer_node.cpp)
+# add_executable(velocity_transformer_node src/velocity_transformer_node.cpp)
 
-ament_target_dependencies(velocity_transformer_node
-  rclcpp
-  std_msgs
-  tf2_geometry_msgs
-  tf2
-  tf2_ros
-)
+# ament_target_dependencies(velocity_transformer_node
+#   rclcpp
+#   std_msgs
+#   tf2_geometry_msgs
+#   tf2
+#   tf2_ros
+# )
 
-install(TARGETS velocity_transformer_node
-  DESTINATION lib/${PROJECT_NAME}
-)
+# install(TARGETS velocity_transformer_node
+#   DESTINATION lib/${PROJECT_NAME}
+# )
