@@ -47,7 +47,7 @@
  
 #include <controller_interface/controller_interface.hpp>
 
-#include "std_msgs/msg/float64_multi_array.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
 #include <array>
 #include "sensor_msgs/msg/joint_state.hpp"
 
@@ -79,14 +79,14 @@ public:
 protected:
   
 
-  void decoderCommandCallback(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
+  void decoderCommandCallback(const geometry_msgs::msg::TwistStamped::SharedPtr msg);
 
   void jointStateCallback(
     const sensor_msgs::msg::JointState::SharedPtr msg);
   
   std::array<double, 6> m_latest_command{}; 
 
-  rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr m_decoder_subscr;
+  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr m_decoder_subscr;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_subscr;
 };
 
