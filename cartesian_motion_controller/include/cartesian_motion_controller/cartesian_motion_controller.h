@@ -47,7 +47,7 @@
  
 #include <controller_interface/controller_interface.hpp>
 
-#include "std_msgs/msg/float64_multi_array.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
 #include <array>
 
 namespace cartesian_motion_controller
@@ -78,10 +78,10 @@ public:
 protected:
   
 
-  void decoderCommandCallback(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
-   std::array<double, 6> m_latest_command{}; 
-  
-   rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr m_decoder_subscr;
+  void decoderCommandCallback(const geometry_msgs::msg::TwistStamped::SharedPtr msg);
+   std::array<double, 6> m_latest_command{};
+
+   rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr m_decoder_subscr;
 };
 
 }  // namespace cartesian_motion_controller

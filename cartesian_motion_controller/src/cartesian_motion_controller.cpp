@@ -75,7 +75,7 @@ CartesianMotionController::on_configure(const rclcpp_lifecycle::State & previous
     return ret;
   }
 
-  m_decoder_subscr = get_node()->create_subscription<std_msgs::msg::Float64MultiArray>(
+  m_decoder_subscr = get_node()->create_subscription<geometry_msgs::msg::TwistStamped>(
     get_node()->get_name() + std::string("/CartesianMotionControllerInput"), 3,
     std::bind(&CartesianMotionController::decoderCommandCallback, this, std::placeholders::_1));
 
@@ -127,16 +127,26 @@ CartesianMotionController::update(const rclcpp::Time & time,
 
 
 void CartesianMotionController::decoderCommandCallback(
-  const std_msgs::msg::Float64MultiArray::SharedPtr msg)
+  const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {
-  // Check if the controller is active and if the message has enough data
-  if (!this->isActive() || msg->data.size() < 6) {
+  // Check if the controller is active
+  if (!this->isActive()) {
     return;
   }
 
+  std::array<double, 6> data = {
+    msg->twist.linear.x,
+    msg->twist.linear.y,
+    msg->twist.linear.z,
+    msg->twist.angular.x,
+    msg->twist.angular.y,
+    msg->twist.angular.z
+  };
+
+
   // Check if the message has NaN
-  for (size_t i = 0; i < msg->data.size(); ++i) {
-    if (std::isnan(msg->data[i])) {
+  for (size_t i = 0; i < data.size(); ++i) {
+    if (std::isnan(data[i])) {
       auto & clock = *get_node()->get_clock();
       RCLCPP_WARN_STREAM_THROTTLE(
         get_node()->get_logger(),
@@ -150,8 +160,8 @@ void CartesianMotionController::decoderCommandCallback(
 
   // Copy the command data
   std::copy_n(
-    msg->data.begin(),
-    std::min(msg->data.size(), size_t(7)),
+    data.begin(),
+    std::min(data.size(), m_latest_command.size()),
     m_latest_command.begin()
   );
 }
