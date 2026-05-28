@@ -44,6 +44,8 @@
 
 #include <kdl/jacobian.hpp>
 #include <memory>
+#include <algorithm>
+#include <vector>
 
 #include "rclcpp/node.hpp"
 
@@ -104,7 +106,20 @@ private:
 
   // Dynamic parameters
   const std::string m_params = "solver.damped_least_squares";  ///< namespace for parameter access
-  double m_alpha;                                              ///< damping coefficient
+  double m_alpha;                                             ///< damping coefficient
+  
+  // OCP parameters
+  bool m_enable_ocp;
+  double m_ocp_horizon;
+  double m_max_acceleration;
+
+  // OCP internal states
+  std::vector<double> m_commanded_joint_velocities;
+  std::vector<double> m_integrated_accelerations;
+  bool m_ocp_init;
+
+  double computeOCP(double T, double v0, double a0, double vf, double af);
+
 };
 
 }  // namespace cartesian_controller_base

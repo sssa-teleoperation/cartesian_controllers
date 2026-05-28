@@ -65,13 +65,26 @@ PLUGINLIB_EXPORT_CLASS(cartesian_controller_base::DampedLeastSquaresSolver,
 
 namespace cartesian_controller_base
 {
-DampedLeastSquaresSolver::DampedLeastSquaresSolver() : m_alpha(0.01) {}
+DampedLeastSquaresSolver::DampedLeastSquaresSolver() 
+  : m_alpha(0.01),
+    m_enable_ocp(true),
+    m_ocp_horizon(0.02),
+    m_max_acceleration(15.0),
+    m_ocp_init(false)
+   {}
 
 DampedLeastSquaresSolver::~DampedLeastSquaresSolver() {}
+
+double DampedLeastSquaresSolver::computeOCP(double T, double v0, double a0, double vf, double af){
+  return -2.0 * (3.0 * v0 - 3.0 * vf + 2.0 * T * a0 + T * af) / (T * T);
+}
+
 
 trajectory_msgs::msg::JointTrajectoryPoint DampedLeastSquaresSolver::getJointControlCmds(
   rclcpp::Duration period, const ctrl::Vector6D & net_force)
 {
+  const double dt = period.seconds();
+
   // Compute joint jacobian
   m_jnt_jacobian_solver->JntToJac(m_current_positions, m_jnt_jacobian);
 
@@ -80,15 +93,73 @@ trajectory_msgs::msg::JointTrajectoryPoint DampedLeastSquaresSolver::getJointCon
   ctrl::MatrixND identity;
   identity.setIdentity(m_number_joints, m_number_joints);
   m_handle->get_parameter(m_params + ".alpha", m_alpha);
+  m_handle->get_parameter(m_params + ".ocp_horizon", m_ocp_horizon);
+  m_handle->get_parameter(m_params + ".max_acceleration", m_max_acceleration);
+  m_handle->get_parameter(m_params + ".enable_ocp", m_enable_ocp);
 
-  m_current_velocities.data =
+  KDL::JntArray desired_joint_velocities;
+  desired_joint_velocities.data =
     (m_jnt_jacobian.data.transpose() * m_jnt_jacobian.data + m_alpha * m_alpha * identity)
       .inverse() *
     m_jnt_jacobian.data.transpose() * net_force;
 
+  if (!m_ocp_init)
+  {
+    m_commanded_joint_velocities.assign(m_number_joints, 0.0);
+    m_integrated_accelerations.assign(m_number_joints, 0.0);
+    m_ocp_init = true;
+  }
+
+  if (m_enable_ocp)
+  {
+    for (int i = 0; i < m_number_joints; ++i)
+    {
+      const double current_joint_acceleration = m_integrated_accelerations[i];
+      const double current_commanded_velocity = m_commanded_joint_velocities[i];
+
+      const double target_joint_velocity = desired_joint_velocities(i);
+      const double target_joint_acceleration = 0.0;
+
+      const double u = computeOCP(
+        m_ocp_horizon,
+        current_commanded_velocity,
+        current_joint_acceleration,
+        target_joint_velocity,
+        target_joint_acceleration
+      );
+
+      m_integrated_accelerations[i] += dt * u;
+
+      m_integrated_accelerations[i] = std::clamp(m_integrated_accelerations[i],
+                   -m_max_acceleration,
+                   m_max_acceleration);
+
+      m_commanded_joint_velocities[i] += dt * m_integrated_accelerations[i];
+
+      m_current_velocities(i) = m_commanded_joint_velocities[i];
+
+      RCLCPP_DEBUG_THROTTLE(
+            m_handle->get_logger(),
+            *m_handle->get_clock(),
+            1000,
+            "OCP on baby!");
+    }
+  }
+  else
+  {
+
+    RCLCPP_DEBUG_THROTTLE(
+          m_handle->get_logger(),
+          *m_handle->get_clock(),
+          1000,
+          "OCP disabled, using raw IK joint velocities directly");
+
+    m_current_velocities = desired_joint_velocities;
+  }
+
   // Integrate once, starting with zero motion
   m_current_positions.data =
-    m_last_positions.data + 0.5 * m_current_velocities.data * period.seconds();
+    m_last_positions.data + 0.5 * m_current_velocities.data * dt;
 
   // Make sure positions stay in allowed margins
   applyJointLimits();
@@ -123,6 +194,13 @@ bool DampedLeastSquaresSolver::init(std::shared_ptr<rclcpp_lifecycle::LifecycleN
   m_jnt_jacobian.resize(m_number_joints);
 
   auto_declare(m_params + ".alpha", 1.0);
+  auto_declare(m_params + ".enable_ocp", true);
+  auto_declare(m_params + ".ocp_horizon", 0.02);
+  auto_declare(m_params + ".max_acceleration", 15.0);
+
+  m_commanded_joint_velocities.assign(m_number_joints, 0.0);
+  m_integrated_accelerations.assign(m_number_joints, 0.0);
+  m_ocp_init = true;
 
   return true;
 }
