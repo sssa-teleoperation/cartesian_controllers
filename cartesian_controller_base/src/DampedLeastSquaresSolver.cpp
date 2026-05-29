@@ -92,6 +92,7 @@ trajectory_msgs::msg::JointTrajectoryPoint DampedLeastSquaresSolver::getJointCon
   // \f$ \dot{q} = ( J^T J + \alpha^2 I )^{-1} J^T f \f$
   ctrl::MatrixND identity;
   identity.setIdentity(m_number_joints, m_number_joints);
+
   m_handle->get_parameter(m_params + ".alpha", m_alpha);
   m_handle->get_parameter(m_params + ".ocp_horizon", m_ocp_horizon);
   m_handle->get_parameter(m_params + ".max_acceleration", m_max_acceleration);
@@ -193,10 +194,11 @@ bool DampedLeastSquaresSolver::init(std::shared_ptr<rclcpp_lifecycle::LifecycleN
   m_jnt_jacobian_solver.reset(new KDL::ChainJntToJacSolver(m_chain));
   m_jnt_jacobian.resize(m_number_joints);
 
-  auto_declare(m_params + ".alpha", 1.0);
-  auto_declare(m_params + ".enable_ocp", true);
-  auto_declare(m_params + ".ocp_horizon", 0.02);
-  auto_declare(m_params + ".max_acceleration", 15.0);
+  auto_declare(m_params + ".alpha", m_alpha);
+  auto_declare(m_params + ".enable_ocp", m_enable_ocp);
+  auto_declare(m_params + ".ocp_horizon", m_ocp_horizon);
+  auto_declare(m_params + ".max_acceleration", m_max_acceleration);
+
 
   m_commanded_joint_velocities.assign(m_number_joints, 0.0);
   m_integrated_accelerations.assign(m_number_joints, 0.0);
