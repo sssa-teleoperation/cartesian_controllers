@@ -48,6 +48,9 @@
 #include <vector>
 
 #include "rclcpp/node.hpp"
+#include "std_msgs/msg/float64_multi_array.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
+
 
 namespace cartesian_controller_base
 {
@@ -103,6 +106,8 @@ public:
 private:
   std::shared_ptr<KDL::ChainJntToJacSolver> m_jnt_jacobian_solver;
   KDL::Jacobian m_jnt_jacobian;
+  rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr m_vel_pub;
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_xdot_pub;
 
   // Dynamic parameters
   const std::string m_params = "solver.damped_least_squares";  ///< namespace for parameter access

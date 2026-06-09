@@ -56,6 +56,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
         realtime_tools
         rclcpp_lifecycle
         geometry_msgs
+        std_msgs
         orocos_kdl
         rclcpp
 )

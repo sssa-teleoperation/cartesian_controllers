@@ -104,12 +104,34 @@ trajectory_msgs::msg::JointTrajectoryPoint DampedLeastSquaresSolver::getJointCon
       .inverse() *
     m_jnt_jacobian.data.transpose() * net_force;
 
-  if (!m_ocp_init)
-  {
-    m_commanded_joint_velocities.assign(m_number_joints, 0.0);
-    m_integrated_accelerations.assign(m_number_joints, 0.0);
-    m_ocp_init = true;
+  std_msgs::msg::Float64MultiArray vel_msg;
+
+  vel_msg.data.resize(m_number_joints);
+  for (int i = 0; i < m_number_joints; ++i) {
+    vel_msg.data[i] = desired_joint_velocities(i);
   }
+
+  m_vel_pub->publish(vel_msg);
+
+  ctrl::Vector6D x_dot_ik = m_jnt_jacobian.data * desired_joint_velocities.data;
+
+  geometry_msgs::msg::TwistStamped new_msg;
+  new_msg.header.stamp = m_handle->now(); 
+  new_msg.twist.linear.x = x_dot_ik(0);
+  new_msg.twist.linear.y = x_dot_ik(1);
+  new_msg.twist.linear.z = x_dot_ik(2);
+  new_msg.twist.angular.x = x_dot_ik(3);
+  new_msg.twist.angular.y = x_dot_ik(4);
+  new_msg.twist.angular.z = x_dot_ik(5);
+
+  m_xdot_pub->publish(new_msg);
+
+  // if (!m_ocp_init)
+  // {
+  //   m_commanded_joint_velocities.assign(m_number_joints, 0.0);
+  //   m_integrated_accelerations.assign(m_number_joints, 0.0);
+  //   m_ocp_init = true;
+  // }
 
   if (m_enable_ocp)
   {
@@ -199,6 +221,9 @@ bool DampedLeastSquaresSolver::init(std::shared_ptr<rclcpp_lifecycle::LifecycleN
   auto_declare(m_params + ".ocp_horizon", m_ocp_horizon);
   auto_declare(m_params + ".max_acceleration", m_max_acceleration);
 
+
+  m_vel_pub = m_handle->create_publisher<std_msgs::msg::Float64MultiArray>("ik_joint_velocities", 10);
+  m_xdot_pub = m_handle->create_publisher<geometry_msgs::msg::TwistStamped>("ik_velocities", 10);
 
   m_commanded_joint_velocities.assign(m_number_joints, 0.0);
   m_integrated_accelerations.assign(m_number_joints, 0.0);
