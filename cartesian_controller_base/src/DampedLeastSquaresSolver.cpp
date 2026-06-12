@@ -140,7 +140,21 @@ trajectory_msgs::msg::JointTrajectoryPoint DampedLeastSquaresSolver::getJointCon
       const double current_joint_acceleration = m_integrated_accelerations[i];
       const double current_commanded_velocity = m_commanded_joint_velocities[i];
 
-      const double target_joint_velocity = desired_joint_velocities(i);
+      double target_joint_velocity = desired_joint_velocities(i);
+
+      const double current_position = m_current_positions.data(i);
+      const double upper_limit = m_upper_pos_limits(i);
+      const double lower_limit = m_lower_pos_limits(i);
+
+      if (current_position >= upper_limit && target_joint_velocity > 0.0)
+      {
+        target_joint_velocity = 0.0;
+      }
+      else if (current_position <= lower_limit && target_joint_velocity < 0.0)
+      {
+        target_joint_velocity = 0.0;
+      }
+
       const double target_joint_acceleration = 0.0;
 
       const double u = computeOCP(
